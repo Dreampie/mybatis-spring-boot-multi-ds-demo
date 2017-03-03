@@ -1,0 +1,67 @@
+package com.example.config;
+
+import org.apache.ibatis.mapping.DatabaseIdProvider;
+import org.apache.ibatis.plugin.Interceptor;
+import org.apache.ibatis.session.SqlSessionFactory;
+import org.mybatis.spring.SqlSessionFactoryBean;
+import org.mybatis.spring.boot.autoconfigure.MybatisProperties;
+import org.mybatis.spring.boot.autoconfigure.SpringBootVFS;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.core.io.ResourceLoader;
+import org.springframework.stereotype.Component;
+import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
+
+import javax.sql.DataSource;
+
+/**
+ * Created by wangrenhui on 2017/3/2.
+ */
+@Component
+public class MybatisConfigurationSupport {
+    private final MybatisProperties mybatisProperties;
+
+    private final Interceptor[] interceptors;
+
+    private final ResourceLoader resourceLoader;
+
+    private final DatabaseIdProvider databaseIdProvider;
+
+    public MybatisConfigurationSupport(MybatisProperties mybatisProperties, ObjectProvider<Interceptor[]> interceptorsProvider,
+                                       ResourceLoader resourceLoader, ObjectProvider<DatabaseIdProvider> databaseIdProvider) {
+        this.mybatisProperties = mybatisProperties;
+        this.interceptors = interceptorsProvider.getIfAvailable();
+        this.resourceLoader = resourceLoader;
+        this.databaseIdProvider = databaseIdProvider.getIfAvailable();
+    }
+
+
+    public SqlSessionFactory build(DataSource dataSource) throws Exception {
+        SqlSessionFactoryBean sqlSessionFactoryBean = new SqlSessionFactoryBean();
+        sqlSessionFactoryBean.setDataSource(dataSource);
+        sqlSessionFactoryBean.setVfs(SpringBootVFS.class);
+        if (StringUtils.hasText(mybatisProperties.getConfigLocation())) {
+            sqlSessionFactoryBean.setConfigLocation(resourceLoader.getResource(mybatisProperties.getConfigLocation()));
+        }
+        sqlSessionFactoryBean.setConfiguration(mybatisProperties.getConfiguration());
+        if (mybatisProperties.getConfigurationProperties() != null) {
+            sqlSessionFactoryBean.setConfigurationProperties(mybatisProperties.getConfigurationProperties());
+        }
+        if (!ObjectUtils.isEmpty(interceptors)) {
+            sqlSessionFactoryBean.setPlugins(interceptors);
+        }
+        if (databaseIdProvider != null) {
+            sqlSessionFactoryBean.setDatabaseIdProvider(databaseIdProvider);
+        }
+        if (StringUtils.hasLength(mybatisProperties.getTypeAliasesPackage())) {
+            sqlSessionFactoryBean.setTypeAliasesPackage(mybatisProperties.getTypeAliasesPackage());
+        }
+        if (StringUtils.hasLength(mybatisProperties.getTypeHandlersPackage())) {
+            sqlSessionFactoryBean.setTypeHandlersPackage(mybatisProperties.getTypeHandlersPackage());
+        }
+        if (!ObjectUtils.isEmpty(mybatisProperties.resolveMapperLocations())) {
+            sqlSessionFactoryBean.setMapperLocations(mybatisProperties.resolveMapperLocations());
+        }
+        return sqlSessionFactoryBean.getObject();
+    }
+}
