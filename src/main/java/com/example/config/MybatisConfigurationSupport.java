@@ -2,10 +2,12 @@ package com.example.config;
 
 import org.apache.ibatis.mapping.DatabaseIdProvider;
 import org.apache.ibatis.plugin.Interceptor;
+import org.apache.ibatis.session.Configuration;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.mybatis.spring.SqlSessionFactoryBean;
 import org.mybatis.spring.boot.autoconfigure.MybatisProperties;
 import org.mybatis.spring.boot.autoconfigure.SpringBootVFS;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Component;
@@ -43,7 +45,11 @@ public class MybatisConfigurationSupport {
         if (StringUtils.hasText(mybatisProperties.getConfigLocation())) {
             sqlSessionFactoryBean.setConfigLocation(resourceLoader.getResource(mybatisProperties.getConfigLocation()));
         }
-        sqlSessionFactoryBean.setConfiguration(mybatisProperties.getConfiguration());
+        if (mybatisProperties.getConfiguration() != null) {
+            Configuration configuration = new Configuration();
+            BeanUtils.copyProperties(mybatisProperties.getConfiguration(), configuration);
+            sqlSessionFactoryBean.setConfiguration(configuration);
+        }
         if (mybatisProperties.getConfigurationProperties() != null) {
             sqlSessionFactoryBean.setConfigurationProperties(mybatisProperties.getConfigurationProperties());
         }
