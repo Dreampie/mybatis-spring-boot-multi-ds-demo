@@ -3,6 +3,7 @@ package com.example.config;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceBuilder;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -24,7 +25,7 @@ public class ETLDataSourceConfig {
     }
 
     @Bean(name = "etlSqlSessionFactory")
-    public SqlSessionFactory etlSqlSessionFactory(DataSource etlDataSource) throws Exception {
+    public SqlSessionFactory etlSqlSessionFactory(@Qualifier("etlDataSource") DataSource etlDataSource) throws Exception {
         return mybatisConfigurationSupport.build(etlDataSource);
     }
 }
